@@ -78,7 +78,7 @@ print "----------------------------------------------"
 numFeatures = len(dataset[0])-1
 print "Number of Features: ", numFeatures
 print "----------------------------------------------"
-k = 3
+k = 25
 print "k: ", k
 predictions=[]
 for x in range(len(testSet)):
