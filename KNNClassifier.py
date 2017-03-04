@@ -77,11 +77,35 @@ def splitFoldDataset(dataSet,fold):
         foldsDataset.append(dataSet[i*divDS:(i*divDS)+divDS])
     return foldsDataset
 
-dataset = readDataset("epi_stroma_data.tsv");
+dataset = readDataset("epi_stroma_subset.tsv");
 print "dataset", len(dataset)
 print "----------------------------------------------"
 numFeatures = len(dataset[0])-1
 print "Number of Features: ", numFeatures
+
+# Calculate maximums
+maxList=[]
+minList=[]
+for i in range(1,numFeatures+1):
+    maxItem = -1000000000
+    minItem = 10000000000
+    for data in dataset:
+        if maxItem <= data[i]:
+            maxItem = data[i];
+        if minItem >= data[i]:
+            minItem = data[i];
+    maxList.append(maxItem);
+    minList.append(minItem);
+# print "List of Maximums:", maxList;
+
+for data in dataset:
+    for i in range(1,numFeatures+1):
+        try:
+            data[i]=(data[i]-minList[i-1])/(float)(maxList[i-1]-minList[i-1]);
+        except Exception:
+            data[i]=data[i]
+
+print dataset[1]
 finalAccuracies = []
 kMax=50
 for k in range(1,kMax+1,2):
