@@ -77,7 +77,7 @@ def splitFoldDataset(dataSet,fold):
         foldsDataset.append(dataSet[i*divDS:(i*divDS)+divDS])
     return foldsDataset
 
-dataset = readDataset("epi_stroma_subset.tsv");
+dataset = readDataset("epi_stroma_data.tsv");
 print "dataset", len(dataset)
 print "----------------------------------------------"
 numFeatures = len(dataset[0])-1
