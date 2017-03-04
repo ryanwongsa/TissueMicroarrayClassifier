@@ -68,23 +68,83 @@ def getAccuracy(testSet, predictions):
 			correct += 1
 	return (correct/float(len(testSet))) * 100.0
 
-dataset = readDataset("epi_stroma_data.tsv");
+# Method to split data randomly into number of folds
+def splitFoldDataset(dataSet,fold):
+    foldsDataset = [];
+    lengthDS =  len(dataSet)
+    divDS = lengthDS / fold;
+    for i in range(fold):
+        foldsDataset.append(dataSet[i*divDS:(i*divDS)+divDS])
+    return foldsDataset
+
+dataset = readDataset("epi_stroma_subset.tsv");
 print "dataset", len(dataset)
-print "----------------------------------------------"
-trainingSet, testSet = splitDataset(dataset, 0.66)
-print "trainingSet", len(trainingSet)
-print "testSet", len(testSet)
 print "----------------------------------------------"
 numFeatures = len(dataset[0])-1
 print "Number of Features: ", numFeatures
-print "----------------------------------------------"
-k = 25
-print "k: ", k
-predictions=[]
-for x in range(len(testSet)):
-	neighbors = getNeighbors(trainingSet, testSet[x], k,numFeatures)
-	result = getResponse(neighbors)
-	predictions.append(result)
-	print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][0]))
-accuracy = getAccuracy(testSet, predictions)
-print('Accuracy: ' + repr(accuracy) + '%')
+finalAccuracies = []
+kMax=50
+for k in range(1,kMax+1,2):
+    print "k: ", k
+    print "----------------------------------------------"
+
+    # SPLIT DATA INTO SUBSETS FOR C-FOLD
+    random.shuffle(dataset);
+    print "random dataset", len(dataset)
+    fold = 10;
+    foldedDataset = splitFoldDataset(dataset,fold)
+
+    totalAccuracy=0
+    for i in range(fold):
+        # combine for training set
+        trainingSet = []
+        for j in range(fold):
+            if i!=j:
+                trainingSet += foldedDataset[j]
+        # left over for test set
+        testSet = foldedDataset[i]
+
+        predictions=[]
+        for x in range(len(testSet)):
+        	neighbors = getNeighbors(trainingSet, testSet[x], k,numFeatures)
+        	result = getResponse(neighbors)
+        	predictions.append(result)
+        	# print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][0]))
+        accuracy = getAccuracy(testSet, predictions)
+        print('Accuracy ' +str(i+1)+ ': ' + repr(accuracy) + '%')
+        totalAccuracy+=accuracy
+
+    print "----------------------------------------------"
+    print 'Average Accuracy ( K= '+str(k)+' ) :'  + repr(totalAccuracy/(float)(fold))+'%'
+    print "=============================================="
+    finalAccuracies.append(repr(totalAccuracy/(float)(fold)))
+
+print "#############################################"
+print "Accuracies for K values"
+a=1;
+for accuracy in finalAccuracies:
+    print a," : ", accuracy
+    a+=2
+print "#############################################"
+
+
+
+
+
+# trainingSet, testSet = splitDataset(dataset, 0.66)
+# print "trainingSet", len(trainingSet)
+# print "testSet", len(testSet)
+# print "----------------------------------------------"
+# numFeatures = len(dataset[0])-1
+# print "Number of Features: ", numFeatures
+# print "----------------------------------------------"
+# k = 25
+# print "k: ", k
+# predictions=[]
+# for x in range(len(testSet)):
+# 	neighbors = getNeighbors(trainingSet, testSet[x], k,numFeatures)
+# 	result = getResponse(neighbors)
+# 	predictions.append(result)
+# 	# print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][0]))
+# accuracy = getAccuracy(testSet, predictions)
+# print('Accuracy: ' + repr(accuracy) + '%')
