@@ -1,7 +1,7 @@
 import random
 import math
+import sys
 import operator
-
 
 # Method to read data from a file
 def readDataset(file):
@@ -17,17 +17,6 @@ def readDataset(file):
         dataset.append(floatLine)
 
     return dataset;
-
-# Method to split data randomly into training and testing subsets
-def splitDataset(dataSet,split):
-    trainingSet = []
-    testSet = []
-    for data in dataSet:
-        if random.random() < split:
-	        trainingSet.append(data)
-        else:
-            testSet.append(data)
-    return trainingSet, testSet
 
 # method to calculate euclidian distance
 def euclideanDistance(item1, item2, length):
@@ -77,7 +66,21 @@ def splitFoldDataset(dataSet,fold):
         foldsDataset.append(dataSet[i*divDS:(i*divDS)+divDS])
     return foldsDataset
 
-dataset = readDataset("epi_stroma_data.tsv");
+
+
+
+
+dataset = readDataset("redv1_epi_stroma_data.tsv");
+count1=0
+count2=0
+for data in dataset:
+    if int(data[0])==1:
+        count1+=1
+    elif int(data[0])==2:
+        count2+=1
+print "1:", count1
+print "2:", count2
+
 print "dataset", len(dataset)
 print "----------------------------------------------"
 numFeatures = len(dataset[0])-1
@@ -87,8 +90,8 @@ print "Number of Features: ", numFeatures
 maxList=[]
 minList=[]
 for i in range(1,numFeatures+1):
-    maxItem = -1000000000
-    minItem = 10000000000
+    maxItem = -sys.float_info.min
+    minItem = sys.float_info.max
     for data in dataset:
         if maxItem <= data[i]:
             maxItem = data[i];
@@ -96,7 +99,7 @@ for i in range(1,numFeatures+1):
             minItem = data[i];
     maxList.append(maxItem);
     minList.append(minItem);
-# print "List of Maximums:", maxList;
+
 
 for data in dataset:
     for i in range(1,numFeatures+1):
@@ -110,6 +113,7 @@ finalAccuracies = []
 kMax=50
 for k in range(1,kMax+1,2):
     print "k: ", k
+
     print "----------------------------------------------"
 
     # SPLIT DATA INTO SUBSETS FOR C-FOLD
@@ -150,25 +154,3 @@ for accuracy in finalAccuracies:
     print a," : ", accuracy
     a+=2
 print "#############################################"
-
-
-
-
-
-# trainingSet, testSet = splitDataset(dataset, 0.66)
-# print "trainingSet", len(trainingSet)
-# print "testSet", len(testSet)
-# print "----------------------------------------------"
-# numFeatures = len(dataset[0])-1
-# print "Number of Features: ", numFeatures
-# print "----------------------------------------------"
-# k = 25
-# print "k: ", k
-# predictions=[]
-# for x in range(len(testSet)):
-# 	neighbors = getNeighbors(trainingSet, testSet[x], k,numFeatures)
-# 	result = getResponse(neighbors)
-# 	predictions.append(result)
-# 	# print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][0]))
-# accuracy = getAccuracy(testSet, predictions)
-# print('Accuracy: ' + repr(accuracy) + '%')
