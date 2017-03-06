@@ -5,23 +5,16 @@ Date: 5 March 2017
 Python: Version 2.7
 ---------------------------------------------------------------
 BayesClassifier.py
-###################
+----------------
 Run with 'python BayesClassifier.py'
-Default with full dataset epi_stroma_data.tsv can comment out and change to epi_stroma_data.tsv from comments.
+Default with full dataset epi_stroma_data.tsv can comment out and change to redv1_epi_stroma_data.tsv from comments.
 Results will run for 10-fold and display misclassification percentage.
-##################################################################################################################
+------------------------------------------------------------------------------------------------
 KNNClassifier.py
-###################
+----------------
 Run with 'python KNNClassifier.py'
-Default with full dataset epi_stroma_data.tsv can comment out and change to epi_stroma_data.tsv from comments.
+Default with full dataset epi_stroma_data.tsv can comment out and change to redv1_epi_stroma_data.tsv from comments.
 Results will run for 10-fold for K values between 1 and 25 and display misclassification percentage.
-##################################################################################################################
-
-##################################################################################################################
-epi_stroma_data.tsv
-###################
-Dataset will all features.
-##################################################################################################################
-redv1_epi_stroma_data.tsv
-###################
-Dataset will all subset of features identified to be useful.
+------------------------------------------------------------------------------------------------
+epi_stroma_data.tsv - Dataset will all features.
+redv1_epi_stroma_data.tsv - Dataset will all subset of features identified to be useful.
