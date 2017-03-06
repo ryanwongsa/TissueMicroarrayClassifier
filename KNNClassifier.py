@@ -25,29 +25,29 @@ def euclideanDistance(item1, item2, length):
 		distance += pow((item1[x] - item2[x]), 2)
 	return math.sqrt(distance)
 
-# method to calculate neighbours
-def getNeighbors(trainingSet, testInstance, k, numFeatures):
+# method to get neighbours for test object
+def getNeighbours(trainingSet, testItem, k, numFeatures):
 	distances = []
 	for x in range(len(trainingSet)):
-		dist = euclideanDistance(testInstance, trainingSet[x], numFeatures)
+		dist = euclideanDistance(testItem, trainingSet[x], numFeatures)
 		distances.append((trainingSet[x], dist))
 	distances.sort(key=operator.itemgetter(1))
-	neighbors = []
+	neighbours = []
 	for x in range(k):
-		neighbors.append(distances[x][0])
-	return neighbors
+		neighbours.append(distances[x][0])
+	return neighbours
 
-# method to get response
-def getResponse(neighbors):
-	classVotes = {}
-	for x in range(len(neighbors)):
-		response = neighbors[x][0] # type of classification
-		if response in classVotes:
-			classVotes[response] += 1
+# method to get classification based on neighbours
+def getClassification(neighbours):
+	vote = {}
+	for x in range(len(neighbours)):
+		response = neighbours[x][0] # type of classification
+		if response in vote:
+			vote[response] += 1
 		else:
-			classVotes[response] = 1
-	sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
-	return sortedVotes[0][0]
+			vote[response] = 1
+	sortVotes = sorted(vote.iteritems(), key=operator.itemgetter(1), reverse=True)
+	return sortVotes[0][0]
 
 # method to get accuracy
 def getAccuracy(testSet, predictions):
@@ -66,91 +66,70 @@ def splitFoldDataset(dataSet,fold):
         foldsDataset.append(dataSet[i*divDS:(i*divDS)+divDS])
     return foldsDataset
 
-
-
-
-
-dataset = readDataset("redv1_epi_stroma_data.tsv");
-count1=0
-count2=0
-for data in dataset:
-    if int(data[0])==1:
-        count1+=1
-    elif int(data[0])==2:
-        count2+=1
-print "1:", count1
-print "2:", count2
-
-print "dataset", len(dataset)
-print "----------------------------------------------"
-numFeatures = len(dataset[0])-1
-print "Number of Features: ", numFeatures
-
-# Calculate maximums
-maxList=[]
-minList=[]
-for i in range(1,numFeatures+1):
-    maxItem = -sys.float_info.min
-    minItem = sys.float_info.max
-    for data in dataset:
-        if maxItem <= data[i]:
-            maxItem = data[i];
-        if minItem >= data[i]:
-            minItem = data[i];
-    maxList.append(maxItem);
-    minList.append(minItem);
-
-
-for data in dataset:
+def normalise(dataset,numFeatures):
+    # Normalise dataset
+    maxList=[]
+    minList=[]
     for i in range(1,numFeatures+1):
-        try:
-            data[i]=(data[i]-minList[i-1])/(float)(maxList[i-1]-minList[i-1]);
-        except Exception:
-            data[i]=data[i]
+        maxItem = -sys.float_info.min
+        minItem = sys.float_info.max
+        for data in dataset:
+            if maxItem <= data[i]:
+                maxItem = data[i];
+            if minItem >= data[i]:
+                minItem = data[i];
+        maxList.append(maxItem);
+        minList.append(minItem);
 
-print dataset[1]
-finalAccuracies = []
-kMax=50
-for k in range(1,kMax+1,2):
-    print "k: ", k
 
-    print "----------------------------------------------"
+    for data in dataset:
+        for i in range(1,numFeatures+1):
+            try:
+                data[i]=(data[i]-minList[i-1])/(float)(maxList[i-1]-minList[i-1]);
+            except Exception: # if max - min is equal to 0
+                data[i]=data[i]
 
-    # SPLIT DATA INTO SUBSETS FOR C-FOLD
-    random.shuffle(dataset);
-    print "random dataset", len(dataset)
+    return dataset
+
+def main():
+    dataset = readDataset("epi_stroma_data.tsv"); # data for full set
+    # dataset = readDataset("redv1_epi_stroma_data.tsv"); # data for subset
+    numFeatures = len(dataset[0])-1
+    kMax=25
     fold = 10;
-    foldedDataset = splitFoldDataset(dataset,fold)
 
-    totalAccuracy=0
-    for i in range(fold):
-        # combine for training set
-        trainingSet = []
-        for j in range(fold):
-            if i!=j:
-                trainingSet += foldedDataset[j]
-        # left over for test set
-        testSet = foldedDataset[i]
+    # Loop for K
+    dataset = normalise(dataset,numFeatures); # 'normalise' of dataset
+    for k in range(1,kMax+1,2):
+        random.shuffle(dataset); # shuffle dataset after each K change
+        foldedDataset = splitFoldDataset(dataset,fold)
 
-        predictions=[]
-        for x in range(len(testSet)):
-        	neighbors = getNeighbors(trainingSet, testSet[x], k,numFeatures)
-        	result = getResponse(neighbors)
-        	predictions.append(result)
-        	# print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][0]))
-        accuracy = getAccuracy(testSet, predictions)
-        print('Accuracy ' +str(i+1)+ ': ' + repr(accuracy) + '%')
-        totalAccuracy+=accuracy
+        totalMisclassification=0
+        print "K = ", k
+        # Loop for fold
+        for i in range(fold):
+            # combine (fold-1) pieces for training set
+            trainingSet = []
+            for j in range(fold):
+                if i!=j:
+                    trainingSet += foldedDataset[j]
 
-    print "----------------------------------------------"
-    print 'Average Accuracy ( K= '+str(k)+' ) :'  + repr(totalAccuracy/(float)(fold))+'%'
-    print "=============================================="
-    finalAccuracies.append(repr(totalAccuracy/(float)(fold)))
 
-print "#############################################"
-print "Accuracies for K values"
-a=1;
-for accuracy in finalAccuracies:
-    print a," : ", accuracy
-    a+=2
-print "#############################################"
+            # left over for test set (1 piece)
+            testSet = foldedDataset[i]
+
+            predictions=[]
+            for x in range(len(testSet)):
+            	neighbours = getNeighbours(trainingSet, testSet[x], k,numFeatures)
+            	result = getClassification(neighbours)
+            	predictions.append(result)
+
+            misclassification = 100 - getAccuracy(testSet, predictions)
+            print('Misclassifcation (Fold: ' +str(i+1)+ ' ): ' + str(misclassification) + '%')
+            totalMisclassification+=misclassification
+
+        print "----------------------------------------------"
+        print 'Average Misclassifcation ( K= '+str(k)+' ) :'  + str(totalMisclassification/(float)(fold))+'%'
+        print "=============================================="
+
+main();
